@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  postgres:
+    build:
+      context: .
+      dockerfile: Dockerfile.postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: root
+      POSTGRES_DB: PavanDB
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-q", "-d", "PavanDB", "-U", "postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  nest-app:
+    build:
+      context: .
+      dockerfile: Dockerfile.nest
+    environment:
+      POSTGRES_HOST: localhost
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: root
+      POSTGRES_DB: PavanDB
+    ports:
+      - "8000:80"
+    depends_on:
+      - postgres 
+    command: ["npm", "run", "start:prod", "--wait-for-db"]
+
+volumes:
+  postgres_data:
